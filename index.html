@@ -336,7 +336,7 @@
           <span class="form-hint" id="tracking-hint">Select a carrier to see format guidance.</span>
         </div>
         <div class="form-group">
-          <label>Expected delivery *</label>
+          <label>Expected delivery</label>
           <input type="date" id="f-delivery">
         </div>
         <div class="form-group">
@@ -542,7 +542,7 @@ function saveShipment() {
   const cat = document.getElementById('f-category').value;
   const carrier = document.getElementById('f-carrier').value;
   const delivery = document.getElementById('f-delivery').value;
-  if (!addr || !cat || !carrier || !delivery) { alert('Please fill in required fields: address, item type, carrier, and delivery date.'); return; }
+  if (!addr || !cat || !carrier) { alert('Please fill in required fields: address, item type, and carrier.'); return; }
   const data = {
     address: addr, category: cat, carrier,
     tracking: document.getElementById('f-tracking').value.trim(),
