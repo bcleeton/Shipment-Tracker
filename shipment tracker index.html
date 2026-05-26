@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shipment Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --border2: #d0cec4;
+    --text: #1a1917;
+    --text2: #6b6860;
+    --text3: #a09e98;
+    --accent: #1a1917;
+    --blue-bg: #e8f0fe; --blue-text: #1a4fd6;
+    --green-bg: #e6f4ea; --green-text: #1a7a3c;
+    --amber-bg: #fef3e2; --amber-text: #92550a;
+    --red-bg: #fce8e8; --red-text: #b71c1c;
+    --purple-bg: #f0edff; --purple-text: #4a3aad;
+    --teal-bg: #e0f5f0; --teal-text: #0a6b52;
+    --pink-bg: #fde8f3; --pink-text: #9c2a6e;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--text);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 16px; height: 16px; fill: white; }
+  .header h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .btn { font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--radius); padding: 7px 14px; transition: all .15s; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--text); color: white; border-color: var(--text); }
+  .btn-primary:hover { opacity: .88; }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .metric .m-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .metric .m-val { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+  .metric .m-val.danger { color: #b71c1c; }
+  .metric .m-val.success { color: #1a7a3c; }
+  .metric .m-val.info { color: #1a4fd6; }
+
+  /* Alert */
+  .alert { background: var(--red-bg); border: 1px solid #f5c6c6; border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: var(--red-text); display: none; align-items: center; gap: 8px; }
+  .alert svg { flex-shrink: 0; }
+
+  /* Category tabs */
+  .cat-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cat-btn {
+    font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border2); border-radius: 20px;
+    padding: 5px 13px; background: var(--surface); color: var(--text2);
+    transition: all .15s;
+  }
+  .cat-btn:hover { border-color: var(--text); color: var(--text); }
+  .cat-btn.active { background: var(--text); color: white; border-color: var(--text); }
+
+  /* Toolbar */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select {
+    font-family: var(--font); font-size: 13px;
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    padding: 7px 11px; background: var(--surface); color: var(--text);
+    outline: none; transition: border-color .15s;
+  }
+  .toolbar input { flex: 1; min-width: 180px; max-width: 280px; }
+  .toolbar select { min-width: 130px; }
+  .toolbar input:focus, .toolbar select:focus { border-color: var(--text); }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafaf8; }
+  tr.overdue td { background: #fff8f8; }
+
+  .addr { font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-link { font-family: var(--mono); font-size: 11px; color: var(--blue-text); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+  .track-link:hover { text-decoration: underline; }
+  .track-none { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .badge-pending { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-transit { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-delivered { background: var(--green-bg); color: var(--green-text); }
+  .badge-delayed { background: var(--red-bg); color: var(--red-text); }
+
+  .cat-pill { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .cat-aframe { background: var(--purple-bg); color: var(--purple-text); }
+  .cat-bandit { background: var(--teal-bg); color: var(--teal-text); }
+  .cat-insert { background: var(--amber-bg); color: var(--amber-text); }
+  .cat-additional { background: var(--pink-bg); color: var(--pink-text); }
+
+  .overdue-tag { font-size: 10px; font-weight: 600; color: var(--red-text); margin-left: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Action buttons */
+  .act-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; cursor: pointer; color: var(--text2); font-size: 12px; transition: all .15s; }
+  .act-btn:hover { background: var(--surface2); color: var(--text); }
+  .act-btn svg { display: block; width: 13px; height: 13px; }
+  .actions { display: flex; gap: 4px; }
+
+  .empty { padding: 48px; text-align: center; color: var(--text2); }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty p { font-size: 13px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border-radius: var(--radius-lg);
+    border: 1px solid var(--border); width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    transform: translateY(12px); transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-header h2 { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; cursor: pointer; color: var(--text2); padding: 4px; border-radius: 6px; }
+  .modal-close:hover { background: var(--surface2); }
+  .modal-body { padding: 0 24px 24px; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-group input, .form-group select, .form-group textarea {
+    font-family: var(--font); font-size: 14px;
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    padding: 9px 12px; background: var(--surface); color: var(--text);
+    outline: none; width: 100%; transition: border-color .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--text); }
+  .form-group textarea { resize: vertical; min-height: 72px; }
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--text); color: white; font-size: 13px; font-weight: 500;
+    padding: 10px 16px; border-radius: var(--radius);
+    transform: translateY(60px); opacity: 0; transition: all .25s;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 700px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .header { padding: 0 16px; }
+    .container { padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    table { font-size: 12px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zm0 4h8v2H2zm0 4h10v2H2z"/></svg>
+    </div>
+    <h1>Shipment Tracker</h1>
+  </div>
+  <div class="header-right">
+    <button class="btn" onclick="exportCSV()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="display:inline;vertical-align:-2px;margin-right:4px"><path d="M8 10.5L4.5 7H7V2h2v5h2.5L8 10.5zm-5 2h10v1.5H3V12.5z"/></svg>
+      Export CSV
+    </button>
+    <button class="btn btn-primary" onclick="openModal()">+ Add shipment</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="metrics" id="metrics"></div>
+  <div class="alert" id="alert-banner">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 14h14L8 1zm0 3l4.5 8h-9L8 4zm-.5 3v3h1V7h-1zm0 4v1h1v-1h-1z"/></svg>
+    <span id="alert-text"></span>
+  </div>
+
+  <div class="cat-row" id="cat-row">
+    <button class="cat-btn active" onclick="setCategory('all')">All items</button>
+    <button class="cat-btn" onclick="setCategory('A-Frame')">A-Frame</button>
+    <button class="cat-btn" onclick="setCategory('Bandit Signs')">Bandit Signs</button>
+    <button class="cat-btn" onclick="setCategory('A-Frame Insert')">A-Frame Insert</button>
+    <button class="cat-btn" onclick="setCategory('Additional Signage/Stickers')">Additional Signage/Stickers</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search address, tracking #, item..." oninput="renderTable()">
+    <select id="filter-status" onchange="renderTable()">
+      <option value="">All statuses</option>
+      <option>Pending</option>
+      <option>In Transit</option>
+      <option>Delivered</option>
+      <option>Delayed</option>
+    </select>
+    <select id="filter-carrier" onchange="renderTable()">
+      <option value="">All carriers</option>
+      <option>UPS</option>
+      <option>FedEx</option>
+      <option>USPS</option>
+      <option>Amazon</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Property address</th>
+          <th>Item type</th>
+          <th>Carrier</th>
+          <th>Tracking #</th>
+          <th>Exp. delivery</th>
+          <th>Status</th>
+          <th>Qty</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="shipment-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add shipment</h2>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Property address *</label>
+          <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP">
+        </div>
+        <div class="form-group">
+          <label>Item type *</label>
+          <select id="f-category">
+            <option value="">Select...</option>
+            <option>A-Frame</option>
+            <option>Bandit Signs</option>
+            <option>A-Frame Insert</option>
+            <option>Additional Signage/Stickers</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="f-qty" placeholder="e.g. 10" min="1">
+        </div>
+        <div class="form-group">
+          <label>Carrier *</label>
+          <select id="f-carrier" onchange="updateHint()">
+            <option value="">Select...</option>
+            <option>UPS</option>
+            <option>FedEx</option>
+            <option>USPS</option>
+            <option>Amazon</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tracking number</label>
+          <input type="text" id="f-tracking" placeholder="Enter tracking number">
+          <span class="form-hint" id="tracking-hint">Select a carrier to see format guidance.</span>
+        </div>
+        <div class="form-group">
+          <label>Expected delivery *</label>
+          <input type="date" id="f-delivery">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option>Pending</option>
+            <option>In Transit</option>
+            <option>Delivered</option>
+            <option>Delayed</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Special instructions, contact info, etc."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveShipment()">Save shipment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SKEY = 'shipments-tracker-v1';
+
+const CARRIER_URLS = {
+  UPS: t => `https://www.ups.com/track?tracknum=${encodeURIComponent(t)}`,
+  FedEx: t => `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(t)}`,
+  USPS: t => `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(t)}`,
+  Amazon: t => `https://track.amazon.com/tracking/${encodeURIComponent(t)}`,
+  Other: t => `https://www.google.com/search?q=${encodeURIComponent(t + ' package tracking')}`
+};
+
+const CARRIER_HINTS = {
+  UPS: '1Z followed by 16 chars — e.g. 1Z999AA10123456784',
+  FedEx: '12 or 15 digits — e.g. 774899172937',
+  USPS: '20–22 digits starting with 9 — e.g. 94001118992201234567',
+  Amazon: 'TBA + digits — e.g. TBA123456789000',
+  Other: 'Enter the number as shown on your shipping confirmation.'
+};
+
+const CAT_CLASSES = {
+  'A-Frame': 'aframe',
+  'Bandit Signs': 'bandit',
+  'A-Frame Insert': 'insert',
+  'Additional Signage/Stickers': 'additional'
+};
+
+const STATUSES = ['Pending', 'In Transit', 'Delivered', 'Delayed'];
+
+let shipments = [];
+let nextId = 1;
+let activeCat = 'all';
+let editingId = null;
+
+function load() {
+  try {
+    const r = localStorage.getItem(SKEY);
+    if (r) { shipments = JSON.parse(r); nextId = shipments.reduce((m, s) => Math.max(m, s.id), 0) + 1; }
+  } catch(e) {}
+}
+
+function save() {
+  try { localStorage.setItem(SKEY, JSON.stringify(shipments)); } catch(e) {}
+}
+
+function isOverdue(s) {
+  if (s.status === 'Delivered') return false;
+  const t = new Date(); t.setHours(0,0,0,0);
+  return new Date(s.delivery + 'T00:00:00') < t;
+}
+
+function trackCell(carrier, tracking) {
+  if (!tracking) return '<span class="track-none">—</span>';
+  const fn = CARRIER_URLS[carrier] || CARRIER_URLS.Other;
+  const url = fn(tracking);
+  const short = tracking.length > 18 ? tracking.slice(0, 16) + '…' : tracking;
+  return `<a class="track-link" href="${url}" target="_blank" rel="noopener">${short} <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><path d="M7 1h4v4M11 1L5 7M2 3h3M2 9V3H8v3"/></svg></a>`;
+}
+
+function badgeHtml(status) {
+  const m = { Pending: 'pending', 'In Transit': 'transit', Delivered: 'delivered', Delayed: 'delayed' };
+  return `<span class="badge badge-${m[status] || 'pending'}">${status}</span>`;
+}
+
+function catPill(cat) {
+  return `<span class="cat-pill cat-${CAT_CLASSES[cat] || 'aframe'}">${cat}</span>`;
+}
+
+function setCategory(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(el => {
+    const label = el.textContent.trim();
+    el.classList.toggle('active', (cat === 'all' && label === 'All items') || label === cat);
+  });
+  renderAll();
+}
+
+function filtered() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const fs = document.getElementById('filter-status').value;
+  const fc = document.getElementById('filter-carrier').value;
+  return shipments.filter(s => {
+    const catOk = activeCat === 'all' || s.category === activeCat;
+    const qOk = !q || (s.address + s.category + (s.tracking||'') + s.carrier + (s.notes||'')).toLowerCase().includes(q);
+    return catOk && qOk && (!fs || s.status === fs) && (!fc || s.carrier === fc);
+  });
+}
+
+function renderMetrics() {
+  const src = activeCat === 'all' ? shipments : shipments.filter(s => s.category === activeCat);
+  const alerts = src.filter(s => s.status === 'Delayed' || isOverdue(s)).length;
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="m-label">Total</div><div class="m-val">${src.length}</div></div>
+    <div class="metric"><div class="m-label">In transit</div><div class="m-val info">${src.filter(s => s.status === 'In Transit').length}</div></div>
+    <div class="metric"><div class="m-label">Delivered</div><div class="m-val success">${src.filter(s => s.status === 'Delivered').length}</div></div>
+    <div class="metric"><div class="m-label">Needs attention</div><div class="m-val ${alerts > 0 ? 'danger' : ''}">${alerts}</div></div>`;
+}
+
+function renderAlerts() {
+  const issues = shipments.filter(s => s.status === 'Delayed' || isOverdue(s));
+  const b = document.getElementById('alert-banner');
+  if (issues.length) {
+    b.style.display = 'flex';
+    document.getElementById('alert-text').textContent = `${issues.length} shipment${issues.length > 1 ? 's' : ''} need attention: ${issues.map(s => s.address.split(',')[0]).join(', ')}`;
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+function renderTable() {
+  const rows = filtered();
+  const tbody = document.getElementById('shipment-table');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📭</div><p>No shipments found</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(s => {
+    const over = isOverdue(s);
+    const dStr = s.delivery ? new Date(s.delivery + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+    return `<tr class="${over || s.status === 'Delayed' ? 'overdue' : ''}">
+      <td><span class="addr" title="${s.address}">${s.address}</span></td>
+      <td>${catPill(s.category)}</td>
+      <td>${s.carrier}</td>
+      <td>${trackCell(s.carrier, s.tracking)}</td>
+      <td>${dStr}${over && s.status !== 'Delivered' ? '<span class="overdue-tag">overdue</span>' : ''}</td>
+      <td>${badgeHtml(s.status)}</td>
+      <td style="text-align:center">${s.qty || '—'}</td>
+      <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)" title="${s.notes||''}">${s.notes || '—'}</td>
+      <td>
+        <div class="actions">
+          <button class="act-btn" onclick="cycleStatus(${s.id})" title="Cycle status">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5V1l3 2.5L8 6V4.5a3.5 3.5 0 1 0 3.5 3.5h2z"/></svg>
+          </button>
+          <button class="act-btn" onclick="editShipment(${s.id})" title="Edit">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9zm1.5 1.5l-1-1-8.5 8.5v1h1l8.5-8.5z"/></svg>
+          </button>
+          <button class="act-btn" onclick="deleteShipment(${s.id})" title="Delete">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2h4v1h4v1H2V3h4V2zm1 3h2v7H7V5zm-2 0h1v7H5V5zm5 0h1v7h-1V5zM3 5h1v8h8V5h1v9H3V5z"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll() { renderMetrics(); renderAlerts(); renderTable(); }
+
+function cycleStatus(id) {
+  const s = shipments.find(x => x.id === id); if (!s) return;
+  s.status = STATUSES[(STATUSES.indexOf(s.status) + 1) % STATUSES.length];
+  save(); renderAll(); showToast(`Status updated to "${s.status}"`);
+}
+
+function deleteShipment(id) {
+  if (!confirm('Delete this shipment?')) return;
+  shipments = shipments.filter(x => x.id !== id);
+  save(); renderAll(); showToast('Shipment deleted');
+}
+
+function editShipment(id) {
+  const s = shipments.find(x => x.id === id); if (!s) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit shipment';
+  document.getElementById('f-address').value = s.address || '';
+  document.getElementById('f-category').value = s.category || '';
+  document.getElementById('f-carrier').value = s.carrier || '';
+  document.getElementById('f-tracking').value = s.tracking || '';
+  document.getElementById('f-delivery').value = s.delivery || '';
+  document.getElementById('f-status').value = s.status || 'Pending';
+  document.getElementById('f-qty').value = s.qty || '';
+  document.getElementById('f-notes').value = s.notes || '';
+  updateHint();
+  openModal();
+}
+
+function saveShipment() {
+  const addr = document.getElementById('f-address').value.trim();
+  const cat = document.getElementById('f-category').value;
+  const carrier = document.getElementById('f-carrier').value;
+  const delivery = document.getElementById('f-delivery').value;
+  if (!addr || !cat || !carrier || !delivery) { alert('Please fill in required fields: address, item type, carrier, and delivery date.'); return; }
+  const data = {
+    address: addr, category: cat, carrier,
+    tracking: document.getElementById('f-tracking').value.trim(),
+    delivery, status: document.getElementById('f-status').value,
+    qty: parseInt(document.getElementById('f-qty').value) || null,
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  if (editingId) {
+    const idx = shipments.findIndex(x => x.id === editingId);
+    if (idx > -1) shipments[idx] = { ...shipments[idx], ...data };
+    showToast('Shipment updated');
+  } else {
+    shipments.unshift({ id: nextId++, ...data });
+    showToast('Shipment added');
+  }
+  save(); renderAll(); closeModal();
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Add shipment';
+  ['f-address','f-tracking','f-delivery','f-notes','f-qty'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-carrier').value = '';
+  document.getElementById('f-status').value = 'Pending';
+  document.getElementById('tracking-hint').textContent = 'Select a carrier to see format guidance.';
+}
+
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+function updateHint() {
+  const carrier = document.getElementById('f-carrier').value;
+  document.getElementById('tracking-hint').textContent = CARRIER_HINTS[carrier] || 'Select a carrier to see format guidance.';
+}
+
+function exportCSV() {
+  const src = activeCat === 'all' ? shipments : shipments.filter(s => s.category === activeCat);
+  if (!src.length) { showToast('No data to export'); return; }
+  const headers = ['Address','Item Type','Carrier','Tracking #','Expected Delivery','Status','Qty','Notes'];
+  const rows = src.map(s => [s.address, s.category, s.carrier, s.tracking||'', s.delivery||'', s.status, s.qty||'', s.notes||''].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `shipments-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exported');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+load();
+renderAll();
+</script>
+</body>
+</html>
