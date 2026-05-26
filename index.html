@@ -718,6 +718,27 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+async function load() {
+  try {
+    const data = await sbFetch('GET');
+    shipments = data.map(r => ({
+      id: r.id,
+      name: r.name || '',
+      address: r.address || '',
+      category: r.category || '',
+      carrier: r.carrier || '',
+      tracking: r.tracking || '',
+      delivery: r.delivery || '',
+      status: r.status || 'Pending',
+      qty: r.qty || null,
+      notes: r.notes || ''
+    }));
+  } catch(e) {
+    console.error('Failed to load from Supabase:', e);
+    showToast('Could not connect to database');
+  }
+}
+
 (async () => {
   await load();
   renderAll();
