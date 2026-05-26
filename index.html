@@ -455,20 +455,24 @@ const SB_URL = 'https://wouuvgnxsbhhmyalzvpc.supabase.co';
 const SB_KEY = 'sb_publishable_R4gkGLOmDGY-TSI88pIw2g_ap88duY5';
 
 async function sbFetch(method, body=null, id=null) {
-  const url = SB_URL + '/rest/v1/Shipments' + (id ? `?id=eq.${id}` : '?order=id.desc');
+  let url = SB_URL + '/rest/v1/Shipments';
+  if (id) url += '?id=eq.' + id;
+  else if (method === 'GET') url += '?order=created_at.desc';
   const opts = {
     method,
     headers: {
       'apikey': SB_KEY,
       'Authorization': 'Bearer ' + SB_KEY,
       'Content-Type': 'application/json',
-      'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+      'Prefer': 'return=representation'
     }
   };
   if (body) opts.body = JSON.stringify(body);
+  console.log('[SB]', method, url, body || '');
   const res = await fetch(url, opts);
-  if (!res.ok) throw new Error(await res.text());
   const text = await res.text();
+  console.log('[SB response]', res.status, text.slice(0, 200));
+  if (!res.ok) throw new Error(text);
   return text ? JSON.parse(text) : [];
 }
 
