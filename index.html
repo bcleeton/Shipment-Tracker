@@ -451,6 +451,26 @@
 
 <script>
 const SKEY = 'shipments-tracker-v1';
+const SB_URL = 'https://wouuvgnxsbhhmyalzvpc.supabase.co';
+const SB_KEY = 'sb_publishable_R4gkGLOmDGY-TSI88pIw2g_ap88duY5';
+
+async function sbFetch(method, body=null, id=null) {
+  const url = SB_URL + '/rest/v1/shipments' + (id ? `?id=eq.${id}` : '');
+  const opts = {
+    method,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
 
 const CARRIER_URLS = {
   UPS: t => `https://www.ups.com/track?tracknum=${encodeURIComponent(t)}`,
@@ -596,16 +616,20 @@ function renderTable() {
 
 function renderAll() { renderMetrics(); renderAlerts(); renderTable(); }
 
-function cycleStatus(id) {
+async function cycleStatus(id) {
   const s = shipments.find(x => x.id === id); if (!s) return;
   s.status = STATUSES[(STATUSES.indexOf(s.status) + 1) % STATUSES.length];
-  save(); renderAll(); showToast(`Status updated to "${s.status}"`);
+  try { await sbFetch('PATCH', { status: s.status }, s.id); } catch(e) { showToast('Error updating status'); return; }
+  renderAll(); showToast(`Status updated to "${s.status}"`);
 }
 
-function deleteShipment(id) {
+async function deleteShipment(id) {
   if (!confirm('Delete this shipment?')) return;
-  shipments = shipments.filter(x => x.id !== id);
-  save(); renderAll(); showToast('Shipment deleted');
+  try {
+    await sbFetch('DELETE', null, id);
+    shipments = shipments.filter(x => x.id !== id);
+    renderAll(); showToast('Shipment deleted');
+  } catch(e) { showToast('Error deleting shipment'); }
 }
 
 function editShipment(id) {
@@ -625,7 +649,7 @@ function editShipment(id) {
   openModal();
 }
 
-function saveShipment() {
+async function saveShipment() {
   const name = document.getElementById('f-name').value.trim();
   const addr = document.getElementById('f-address').value.trim();
   const cat = document.getElementById('f-category').value;
@@ -640,14 +664,21 @@ function saveShipment() {
     notes: document.getElementById('f-notes').value.trim()
   };
   if (editingId) {
-    const idx = shipments.findIndex(x => x.id === editingId);
-    if (idx > -1) shipments[idx] = { ...shipments[idx], ...data };
-    showToast('Shipment updated');
+    try {
+      await sbFetch('PATCH', data, editingId);
+      const idx = shipments.findIndex(x => x.id === editingId);
+      if (idx > -1) shipments[idx] = { ...shipments[idx], ...data };
+      showToast('Shipment updated');
+    } catch(e) { showToast('Error saving changes'); return; }
   } else {
-    shipments.unshift({ id: nextId++, ...data });
-    showToast('Shipment added');
+    try {
+      const result = await sbFetch('POST', data);
+      const saved = result[0] || { id: nextId++, ...data };
+      shipments.unshift({ ...saved, name: saved.name||'', address: saved.address||'' });
+      showToast('Shipment added');
+    } catch(e) { showToast('Error adding shipment'); return; }
   }
-  save(); renderAll(); closeModal();
+  renderAll(); closeModal();
 }
 
 function openModal() {
@@ -693,8 +724,10 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-load();
-renderAll();
+(async () => {
+  await load();
+  renderAll();
+})();
 
 
 const PASS = 'a!g3ntl3$$';
