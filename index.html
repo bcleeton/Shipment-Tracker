@@ -274,7 +274,7 @@
     <table>
       <thead>
         <tr>
-          <th>Property address</th>
+          <th>Property name</th><th>Property address</th>
           <th>Item type</th>
           <th>Carrier</th>
           <th>Tracking #</th>
@@ -302,7 +302,11 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group full">
-          <label>Property address *</label>
+          <label>Property name *</label>
+          <input type="text" id="f-name" placeholder="e.g. Oakwood Residences, The Monroe">
+        </div>
+        <div class="form-group full">
+          <label>Property address</label>
           <input type="text" id="f-address" placeholder="123 Main St, City, State ZIP">
         </div>
         <div class="form-group">
@@ -445,7 +449,7 @@ function filtered() {
   const fc = document.getElementById('filter-carrier').value;
   return shipments.filter(s => {
     const catOk = activeCat === 'all' || s.category === activeCat;
-    const qOk = !q || (s.address + s.category + (s.tracking||'') + s.carrier + (s.notes||'')).toLowerCase().includes(q);
+    const qOk = !q || ((s.name||'') + s.address + s.category + (s.tracking||'') + s.carrier + (s.notes||'')).toLowerCase().includes(q);
     return catOk && qOk && (!fs || s.status === fs) && (!fc || s.carrier === fc);
   });
 }
@@ -465,7 +469,7 @@ function renderAlerts() {
   const b = document.getElementById('alert-banner');
   if (issues.length) {
     b.style.display = 'flex';
-    document.getElementById('alert-text').textContent = `${issues.length} shipment${issues.length > 1 ? 's' : ''} need attention: ${issues.map(s => s.address.split(',')[0]).join(', ')}`;
+    document.getElementById('alert-text').textContent = `${issues.length} shipment${issues.length > 1 ? 's' : ''} need attention: ${issues.map(s => s.name || s.address.split(',')[0]).join(', ')}`;
   } else {
     b.style.display = 'none';
   }
@@ -475,14 +479,15 @@ function renderTable() {
   const rows = filtered();
   const tbody = document.getElementById('shipment-table');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📭</div><p>No shipments found</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="empty-icon">📭</div><p>No shipments found</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(s => {
     const over = isOverdue(s);
     const dStr = s.delivery ? new Date(s.delivery + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
     return `<tr class="${over || s.status === 'Delayed' ? 'overdue' : ''}">
-      <td><span class="addr" title="${s.address}">${s.address}</span></td>
+      <td><span class="addr" title="${s.name||''}">${s.name||'—'}</span></td>
+      <td><span class="addr" title="${s.address||''}">${s.address||'—'}</span></td>
       <td>${catPill(s.category)}</td>
       <td>${s.carrier}</td>
       <td>${trackCell(s.carrier, s.tracking)}</td>
@@ -525,6 +530,7 @@ function editShipment(id) {
   const s = shipments.find(x => x.id === id); if (!s) return;
   editingId = id;
   document.getElementById('modal-title').textContent = 'Edit shipment';
+  document.getElementById('f-name').value = s.name || '';
   document.getElementById('f-address').value = s.address || '';
   document.getElementById('f-category').value = s.category || '';
   document.getElementById('f-carrier').value = s.carrier || '';
@@ -538,13 +544,14 @@ function editShipment(id) {
 }
 
 function saveShipment() {
+  const name = document.getElementById('f-name').value.trim();
   const addr = document.getElementById('f-address').value.trim();
   const cat = document.getElementById('f-category').value;
   const carrier = document.getElementById('f-carrier').value;
   const delivery = document.getElementById('f-delivery').value;
-  if (!addr || !cat || !carrier) { alert('Please fill in required fields: address, item type, and carrier.'); return; }
+  if (!name || !cat || !carrier) { alert('Please fill in required fields: property name, item type, and carrier.'); return; }
   const data = {
-    address: addr, category: cat, carrier,
+    name, address: addr, category: cat, carrier,
     tracking: document.getElementById('f-tracking').value.trim(),
     delivery, status: document.getElementById('f-status').value,
     qty: parseInt(document.getElementById('f-qty').value) || null,
@@ -569,7 +576,7 @@ function closeModal() {
   document.getElementById('modal').classList.remove('open');
   editingId = null;
   document.getElementById('modal-title').textContent = 'Add shipment';
-  ['f-address','f-tracking','f-delivery','f-notes','f-qty'].forEach(id => document.getElementById(id).value = '');
+  ['f-name','f-address','f-tracking','f-delivery','f-notes','f-qty'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-category').value = '';
   document.getElementById('f-carrier').value = '';
   document.getElementById('f-status').value = 'Pending';
