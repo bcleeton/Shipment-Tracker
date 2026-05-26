@@ -229,9 +229,62 @@
     table { font-size: 12px; }
     th, td { padding: 8px 10px; }
   }
+
+  .lock-screen {
+    position: fixed; inset: 0; background: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; flex-direction: column; gap: 0;
+  }
+  .lock-box {
+    background: var(--ivory); border-radius: var(--radius-lg);
+    padding: 40px 36px; width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .lock-logo {
+    width: 44px; height: 44px; background: var(--navy);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  }
+  .lock-logo svg { width: 22px; height: 22px; fill: var(--buttercream); }
+  .lock-box h2 { font-size: 17px; font-weight: 600; color: var(--navy); text-align: center; }
+  .lock-box p { font-size: 13px; color: var(--cocoa); text-align: center; margin-top: -12px; }
+  .lock-input-wrap { width: 100%; position: relative; }
+  .lock-input-wrap input {
+    width: 100%; font-family: var(--font); font-size: 15px;
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    padding: 10px 40px 10px 14px; background: white; color: var(--navy);
+    outline: none; letter-spacing: 2px;
+  }
+  .lock-input-wrap input:focus { border-color: var(--navy); }
+  .lock-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text3); padding: 2px; }
+  .lock-btn {
+    width: 100%; background: var(--navy); color: var(--ivory);
+    border: none; border-radius: var(--radius); padding: 11px;
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .lock-btn:hover { opacity: .88; }
+  .lock-error { font-size: 13px; color: #8b1c1c; background: var(--red-bg); border-radius: var(--radius); padding: 8px 12px; width: 100%; text-align: center; display: none; }
 </style>
 </head>
 <body>
+
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo">
+      <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zm0 4h8v2H2zm0 4h10v2H2z"/></svg>
+    </div>
+    <h2>Shipment Tracker</h2>
+    <p>Enter your team password to continue</p>
+    <div class="lock-input-wrap">
+      <input type="password" id="lock-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPassword()">
+      <button class="lock-toggle" onclick="togglePw()" tabindex="-1">
+        <svg id="eye-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3C4 3 1 8 1 8s3 5 7 5 7-5 7-5-3-5-7-5zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0-5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+      </button>
+    </div>
+    <div class="lock-error" id="lock-error">Incorrect password. Please try again.</div>
+    <button class="lock-btn" onclick="checkPassword()">Enter</button>
+  </div>
+</div>
 
 <header class="header">
   <div class="header-left">
@@ -642,6 +695,33 @@ function showToast(msg) {
 
 load();
 renderAll();
+
+
+const PASS = 'a!g3ntl3$$';
+const SESSION_KEY = 'st_auth';
+
+function checkPassword() {
+  const val = document.getElementById('lock-input').value;
+  const err = document.getElementById('lock-error');
+  if (val === PASS) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('lock-screen').style.display = 'none';
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+function togglePw() {
+  const inp = document.getElementById('lock-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+  document.getElementById('lock-screen').style.display = 'none';
+}
 
 let addrTimer = null;
 let addrController = null;
