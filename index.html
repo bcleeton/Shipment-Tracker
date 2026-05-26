@@ -455,7 +455,7 @@ const SB_URL = 'https://wouuvgnxsbhhmyalzvpc.supabase.co';
 const SB_KEY = 'sb_publishable_R4gkGLOmDGY-TSI88pIw2g_ap88duY5';
 
 async function sbFetch(method, body=null, id=null) {
-  const url = SB_URL + '/rest/v1/Shipments' + (id ? `?id=eq.${id}` : '');
+  const url = SB_URL + '/rest/v1/Shipments' + (id ? `?id=eq.${id}` : '?order=id.desc');
   const opts = {
     method,
     headers: {
@@ -498,20 +498,10 @@ const CAT_CLASSES = {
 const STATUSES = ['Pending', 'In Transit', 'Delivered', 'Delayed'];
 
 let shipments = [];
-let nextId = 1;
 let activeCat = 'all';
 let editingId = null;
 
-function load() {
-  try {
-    const r = localStorage.getItem(SKEY);
-    if (r) { shipments = JSON.parse(r); nextId = shipments.reduce((m, s) => Math.max(m, s.id), 0) + 1; }
-  } catch(e) {}
-}
-
-function save() {
-  try { localStorage.setItem(SKEY, JSON.stringify(shipments)); } catch(e) {}
-}
+// Data loaded from Supabase only
 
 function isOverdue(s) {
   if (s.status === 'Delivered') return false;
@@ -673,8 +663,8 @@ async function saveShipment() {
   } else {
     try {
       const result = await sbFetch('POST', data);
-      const saved = result[0] || { id: nextId++, ...data };
-      shipments.unshift({ ...saved, name: saved.name||'', address: saved.address||'' });
+      const saved = result[0] || { ...data };
+      shipments.unshift({ id: saved.id, name: saved.name||'', address: saved.address||'', category: saved.category||'', carrier: saved.carrier||'', tracking: saved.tracking||'', delivery: saved.delivery||'', status: saved.status||'Pending', qty: saved.qty||null, notes: saved.notes||'' });
       showToast('Shipment added');
     } catch(e) { showToast('Error adding shipment'); return; }
   }
