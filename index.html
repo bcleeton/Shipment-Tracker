@@ -455,7 +455,7 @@ const SB_URL = 'https://wouuvgnxsbhhmyalzvpc.supabase.co';
 const SB_KEY = 'sb_publishable_R4gkGLOmDGY-TSI88pIw2g_ap88duY5';
 
 async function sbFetch(method, body=null, id=null) {
-  const url = SB_URL + '/rest/v1/shipments' + (id ? `?id=eq.${id}` : '');
+  const url = SB_URL + '/rest/v1/Shipments' + (id ? `?id=eq.${id}` : '');
   const opts = {
     method,
     headers: {
